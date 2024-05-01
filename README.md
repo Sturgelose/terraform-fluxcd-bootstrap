@@ -1,3 +1,12 @@
+# FluxCD Terraform/OpenTofu Installer
+
+This module sets up FluxCD by using a HelmChart through Terraform or OpenTofu.
+
+This projects is an alternative to the official FluxCD provider as it aims to be more lightweight.
+The original provider creates all the resources directly in Kubernetes, generating lengthy diffs and slow plans.
+
+By using a HelmRelease under the hood, the only diffs should only be the values of the Helm Chart, helping in speed and management.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
