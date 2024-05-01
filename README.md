@@ -1,4 +1,4 @@
-# FluxCD Terraform/OpenTofu Installer
+# FluxCD Terraform/OpenTofu Bootstrap Module
 
 This module sets up FluxCD by using a HelmChart through Terraform or OpenTofu.
 
