@@ -2,10 +2,13 @@
 
 all: tflint docs
 
+tffmt:
+	@echo "Running terraform fmt"
+	terraform fmt
+
 tflint:
 	@echo "Running tflint..."
-	tflint .
-	@if [ $? -ne 0 ]; then echo "Tflint found errors. Please fix them before continuing."; exit 1; fi
+	tflint
 
 docs:
 	@echo "Generating Terraform documentation..."

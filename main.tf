@@ -11,13 +11,13 @@ resource "helm_release" "flux" {
   chart      = var.helm.chart_name
   version    = var.helm.chart_version
 
-  namespace = kubernetes_namespace.ns.metadata.name
+  namespace = kubernetes_namespace.ns.metadata[0].name
 
   wait          = true
   wait_for_jobs = true
 
   values = [
-    var.custom_values,
+    var.custom_values.flux2,
   ]
 
   set {
@@ -25,9 +25,12 @@ resource "helm_release" "flux" {
     value = var.cluster_domain
   }
 
-  set {
-    name  = "imagePullSecrets"
-    value = jsonencode(var.image_pull_secrets)
+  dynamic "set_list" {
+    for_each = length(var.image_pull_secrets) != 0 ? ["this"] : []
+    content {
+      name  = "imagePullSecrets"
+      value = var.image_pull_secrets
+    }
   }
 
   set {
@@ -59,75 +62,72 @@ resource "helm_release" "flux" {
     name  = "multitenancy.defaultServiceAccount"
     value = var.multi_tenancy.default_service_account
   }
+
+  depends_on = [ kubernetes_namespace.ns ]
 }
 
-resource "kubernetes_manifest" "gitrepo" {
-  manifest = {
-    "apiVersion" = "source.toolkit.fluxcd.io/v1"
-    "kind"       = "GitRepository"
-    "metadata" = {
-      "name"      = "flux-system"
-      "namespace" = kubernetes_namespace.ns.metadata.name
-    }
-    "spec" = {
-      "interval"          = var.flux_sync.interval
-      "url"               = var.flux_sync.git_repository
-      "recurseSubmodules" = var.flux_sync.recurse_submodules
-      "secretRef" = {
-        "name" = kubernetes_secret.flux_system.metadata.name
-      }
-      "ref" = {
-        "branch" = var.flux_sync.git_branch
-      }
-    }
-  }
+resource "helm_release" "flux_sync" {
+  name       = "${var.helm.release_name}-sync"
+  repository = var.helm.chart_repository
+  chart      = var.helm.chart_name_sync
+  version    = var.helm.chart_sync_version
 
-  wait {
-    fields = {
-      "status.conditions.type"   = "Ready"
-      "status.conditions.status" = "True"
-    }
-  }
+  namespace = kubernetes_namespace.ns.metadata[0].name
 
-  depends_on = [
-    helm_release.flux,
-    kukubernetes_secret.flux_system,
+  wait          = true
+  wait_for_jobs = true
+
+  values = [
+    var.custom_values.flux2_sync,
   ]
-}
 
-resource "kubernetes_manifest" "flux_system_sync" {
-  manifest = {
-    "apiVersion" = "source.toolkit.fluxcd.io/v1"
-    "kind"       = "Kustomization"
-    "metadata" = {
-      "name"      = "flux-system"
-      "namespace" = kubernetes_namespace.ns.metadata.name
-    }
-    "spec" = {
-      "interval"        = var.flux_sync.interval
-      "path"            = var.flux_sync.git_path
-      "targetNamespace" = kubernetes_namespace.ns.metadata.name
-      "sourceRef" = {
-        "kind" = "GitRepository"
-        "name" = kubernetes_manifest.gitrepo.manifest.metadata.name
-      }
-    }
+  set {
+    name = "gitRepository.spec.secretRef.name"
+    value = kubernetes_secret.flux_system.metadata[0].name
   }
 
-  wait {
-    fields = {
-      "status.conditions.type"   = "Ready"
-      "status.conditions.status" = "True"
-    }
+  set {
+    name = "gitRepository.spec.recurseSubmodules"
+    value = var.flux_sync.recurse_submodules
   }
 
-  depends_on = [helm_release.this]
+  set {
+    name = "gitRepository.spec.url"
+    value = var.flux_sync.git_repository
+  }
+
+  set {
+    name = "gitRepository.spec.ref.branch"
+    value = var.flux_sync.git_branch
+  }
+
+  set {
+    name = "gitRepository.spec.interval"
+    value = var.flux_sync.interval
+  }
+
+  set {
+    name = "kustomization.spec.interval"
+    value = var.flux_sync.interval
+  }
+
+  set {
+    name = "kustomization.spec.path"
+    value = var.flux_sync.git_path
+  }
+
+  set {
+    name = "kustomization.spec.targetNamespace"
+    value = kubernetes_namespace.ns.metadata[0].name
+  }
+
+  depends_on = [ helm_release.flux, kubernetes_namespace.ns ]
 }
 
 resource "kubernetes_secret" "flux_system" {
   metadata {
     name      = "flux-secret"
-    namespace = kubernetes_namespace.ns.metadata.name
+    namespace = kubernetes_namespace.ns.metadata[0].name
   }
 
   data = var.git_credentials

@@ -1,10 +1,13 @@
 variable "helm" {
   type = object({
     chart_repository = optional(string, "https://fluxcd-community.github.io/helm-charts")
-    chart_name       = optional(string, "flux")
+    chart_name       = optional(string, "flux2")
+    chart_name_sync  = optional(string, "flux2-sync")
     chart_version    = optional(string, "2.12.4")
+    chart_sync_version = optional(string, "1.8.2")
     release_name     = optional(string, "flux-system")
   })
+  default = {}
   description = "Configuration to install FluxCD via a HelmChart."
 }
 
@@ -37,8 +40,11 @@ variable "namespace" {
 }
 
 variable "custom_values" {
-  type        = string
-  default     = ""
+  type        = object({
+    flux2_sync = optional(string, "")
+    flux2 = optional(string, "")
+  })
+  default     = {}
   description = "Extra values to costumize the HelmChart with."
 }
 
@@ -78,5 +84,6 @@ variable "multi_tenancy" {
     default_service_account = optional(string, "default")
     privileged              = optional(bool, true)
   })
+  default     = {}
   description = "Configuration to enable Multi Tenancy in Flux."
 }
