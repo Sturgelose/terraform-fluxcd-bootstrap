@@ -13,10 +13,10 @@ variable "helm" {
 
 variable "flux_sync" {
   type = object({
-    interval           = optional(string, "1m0s")
     git_repository     = string
     git_branch         = optional(string, "main")
     git_path           = string
+    interval           = optional(string, "1m0s")
     recurse_submodules = optional(bool, false)
   })
   description = "Configuration to authenticate and sync against a Git repository."
@@ -30,12 +30,10 @@ variable "git_credentials" {
 
 variable "namespace" {
   type = object({
-    name        = string
+    name        = optional(string, "flux-system")
     annotations = optional(map(string), {})
   })
-  default = {
-    name = "flux-system"
-  }
+  default     = {}
   description = "Namespace where to install Flux."
 }
 
