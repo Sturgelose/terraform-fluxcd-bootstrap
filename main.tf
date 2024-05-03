@@ -17,7 +17,7 @@ resource "helm_release" "flux" {
   wait_for_jobs = true
 
   values = [
-    var.custom_values.flux2,
+    var.custom_values.flux,
   ]
 
   set {
@@ -78,7 +78,7 @@ resource "helm_release" "flux_sync" {
   wait_for_jobs = true
 
   values = [
-    var.custom_values.flux2_sync,
+    var.custom_values.flux_sync,
   ]
 
   set {

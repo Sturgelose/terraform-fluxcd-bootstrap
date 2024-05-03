@@ -10,36 +10,38 @@ By using a HelmReleases under the hood, the only diffs should only be the values
 It is not possible to install the GitRepository and Kustomization files in the module as it tries to validate the CRDs in the server that do not exist (yet). Instead we are installing two different Helm Charts that help to avoid this validation in the Kubernetes provider.
 
 <!-- BEGIN_TF_DOCS -->
-## Requirements
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~>1.0 |
-| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~>2 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | ~>2 |
 
-## Providers
+## Example
 
-| Name | Version |
-|------|---------|
-| <a name="provider_helm"></a> [helm](#provider\_helm) | ~>2 |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | ~>2 |
+```hcl
+resource "kind_cluster" "this" {
+    name = "test-cluster"
+}
 
-## Resources
+module "flux" {
+  source = "../"
 
-| Name | Type |
-|------|------|
-| [helm_release.flux](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
-| [helm_release.flux_sync](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
-| [kubernetes_namespace.ns](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace) | resource |
-| [kubernetes_secret.flux_system](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret) | resource |
+  flux_sync = {
+    git_repository = "https://github.com/Sturgelose/flux-structure-example.git"
+    git_path = "./clusters/housy"
+  }
+
+  # Format defined in Flux Documentation: 
+  # https://fluxcd.io/flux/components/source/gitrepositories/#secret-reference
+  git_credentials = {
+    username = "user"
+    password = "pass"
+  }
+}
+```
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cluster_domain"></a> [cluster\_domain](#input\_cluster\_domain) | Domain of the cluster. | `string` | `"cluster.local"` | no |
-| <a name="input_custom_values"></a> [custom\_values](#input\_custom\_values) | Extra values to costumize the HelmChart with. | <pre>object({<br>    flux2_sync = optional(string, "")<br>    flux2      = optional(string, "")<br>  })</pre> | `{}` | no |
+| <a name="input_custom_values"></a> [custom\_values](#input\_custom\_values) | Extra values to costumize the HelmChart with. | <pre>object({<br>    flux_sync = optional(string, "")<br>    flux      = optional(string, "")<br>  })</pre> | `{}` | no |
 | <a name="input_flux_sync"></a> [flux\_sync](#input\_flux\_sync) | Configuration to authenticate and sync against a Git repository. | <pre>object({<br>    interval           = optional(string, "1m0s")<br>    git_repository     = string<br>    git_branch         = optional(string, "main")<br>    git_path           = string<br>    recurse_submodules = optional(bool, false)<br>  })</pre> | n/a | yes |
 | <a name="input_git_credentials"></a> [git\_credentials](#input\_git\_credentials) | Credentials to authenticate against the Git repository. | `map(string)` | n/a | yes |
 | <a name="input_helm"></a> [helm](#input\_helm) | Configuration to install FluxCD via a HelmChart. | <pre>object({<br>    chart_repository   = optional(string, "https://fluxcd-community.github.io/helm-charts")<br>    chart_name         = optional(string, "flux2")<br>    chart_name_sync    = optional(string, "flux2-sync")<br>    chart_version      = optional(string, "2.12.4")<br>    chart_sync_version = optional(string, "1.8.2")<br>    release_name       = optional(string, "flux-system")<br>  })</pre> | `{}` | no |
@@ -49,4 +51,11 @@ It is not possible to install the GitRepository and Kustomization files in the m
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace where to install Flux. | <pre>object({<br>    name        = string<br>    annotations = optional(map(string), {})<br>  })</pre> | <pre>{<br>  "name": "flux-system"<br>}</pre> | no |
 | <a name="input_network_policy"></a> [network\_policy](#input\_network\_policy) | Deny ingress access to the toolkit controllers from other namespaces using network policies. | `bool` | `true` | no |
 | <a name="input_watch_all_namespaces"></a> [watch\_all\_namespaces](#input\_watch\_all\_namespaces) | If true watch for custom resources in all namespaces. | `bool` | `true` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_flux_helm_values"></a> [flux\_helm\_values](#output\_flux\_helm\_values) | Computed values for Flux Chart |
+| <a name="output_flux_sync_helm_values"></a> [flux\_sync\_helm\_values](#output\_flux\_sync\_helm\_values) | Computed values for Flux Sync Chart |  
 <!-- END_TF_DOCS -->

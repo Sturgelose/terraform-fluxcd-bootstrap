@@ -41,8 +41,8 @@ variable "namespace" {
 
 variable "custom_values" {
   type = object({
-    flux2_sync = optional(string, "")
-    flux2      = optional(string, "")
+    flux_sync = optional(string, "")
+    flux      = optional(string, "")
   })
   default     = {}
   description = "Extra values to costumize the HelmChart with."
