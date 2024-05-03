@@ -7,7 +7,21 @@ The original provider creates all the resources directly in Kubernetes, generati
 
 By using a HelmReleases under the hood, the only diffs should only be the values of the Helm Chart, helping in speed and management.
 
+## Known Issues
+
+### Using the Kubernetes provider
+
 It is not possible to install the GitRepository and Kustomization files in the module as it tries to validate the CRDs in the server that do not exist (yet). Instead we are installing two different Helm Charts that help to avoid this validation in the Kubernetes provider.
+
+### Chart installation valid while the Flux resources are not ready
+
+This chart installs a GitRepository and a Kustomization resources to configure the main loop of the GitOps sync. Both are being installed via the `flux-sync` chart.
+However, sometimes Helm might assume that the resources are ready when they are in fact failing to connect to the upstream github repo with the GitOps declarations.
+
+The main reason is that both Kubernetes nor Helm have a standard way to validate that a resource's status is "OK" for Resources based in CRDs.
+As a result, Helm doesn't make sure that the GitRepository and Kustomizations have a valid state.
+
+This is a known issue, and we can potentially mitigate it with a post-install/post-upgrade hook to double-check it in-cluster.
 
 <!-- BEGIN_TF_DOCS -->
 
