@@ -63,7 +63,7 @@ resource "helm_release" "flux" {
     value = var.multi_tenancy.default_service_account
   }
 
-  depends_on = [ kubernetes_namespace.ns ]
+  depends_on = [kubernetes_namespace.ns]
 }
 
 resource "helm_release" "flux_sync" {
@@ -82,46 +82,46 @@ resource "helm_release" "flux_sync" {
   ]
 
   set {
-    name = "gitRepository.spec.secretRef.name"
+    name  = "gitRepository.spec.secretRef.name"
     value = kubernetes_secret.flux_system.metadata[0].name
   }
 
   set {
-    name = "gitRepository.spec.recurseSubmodules"
+    name  = "gitRepository.spec.recurseSubmodules"
     value = var.flux_sync.recurse_submodules
   }
 
   set {
-    name = "gitRepository.spec.url"
+    name  = "gitRepository.spec.url"
     value = var.flux_sync.git_repository
   }
 
   set {
-    name = "gitRepository.spec.ref.branch"
+    name  = "gitRepository.spec.ref.branch"
     value = var.flux_sync.git_branch
   }
 
   set {
-    name = "gitRepository.spec.interval"
+    name  = "gitRepository.spec.interval"
     value = var.flux_sync.interval
   }
 
   set {
-    name = "kustomization.spec.interval"
+    name  = "kustomization.spec.interval"
     value = var.flux_sync.interval
   }
 
   set {
-    name = "kustomization.spec.path"
+    name  = "kustomization.spec.path"
     value = var.flux_sync.git_path
   }
 
   set {
-    name = "kustomization.spec.targetNamespace"
+    name  = "kustomization.spec.targetNamespace"
     value = kubernetes_namespace.ns.metadata[0].name
   }
 
-  depends_on = [ helm_release.flux, kubernetes_namespace.ns ]
+  depends_on = [helm_release.flux, kubernetes_namespace.ns]
 }
 
 resource "kubernetes_secret" "flux_system" {

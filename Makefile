@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: tflint docs
+all: tffmt tflint docs
 
 tffmt:
 	@echo "Running terraform fmt"

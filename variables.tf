@@ -1,13 +1,13 @@
 variable "helm" {
   type = object({
-    chart_repository = optional(string, "https://fluxcd-community.github.io/helm-charts")
-    chart_name       = optional(string, "flux2")
-    chart_name_sync  = optional(string, "flux2-sync")
-    chart_version    = optional(string, "2.12.4")
+    chart_repository   = optional(string, "https://fluxcd-community.github.io/helm-charts")
+    chart_name         = optional(string, "flux2")
+    chart_name_sync    = optional(string, "flux2-sync")
+    chart_version      = optional(string, "2.12.4")
     chart_sync_version = optional(string, "1.8.2")
-    release_name     = optional(string, "flux-system")
+    release_name       = optional(string, "flux-system")
   })
-  default = {}
+  default     = {}
   description = "Configuration to install FluxCD via a HelmChart."
 }
 
@@ -40,9 +40,9 @@ variable "namespace" {
 }
 
 variable "custom_values" {
-  type        = object({
+  type = object({
     flux2_sync = optional(string, "")
-    flux2 = optional(string, "")
+    flux2      = optional(string, "")
   })
   default     = {}
   description = "Extra values to costumize the HelmChart with."
