@@ -25,6 +25,7 @@ variable "flux_sync" {
 variable "git_credentials" {
   type        = map(string)
   sensitive   = true
+  default     = null
   description = "Credentials to authenticate against the Git repository."
 }
 

@@ -5,16 +5,17 @@ resource "kubernetes_namespace" "ns" {
   }
 }
 
-resource "helm_release" "flux" {
-  name       = var.helm.release_name
+resource "helm_release" "flux_base" {
+  name       = "${var.helm.release_name}-base"
   repository = var.helm.chart_repository
   chart      = var.helm.chart_name
   version    = var.helm.chart_version
 
   namespace = kubernetes_namespace.ns.metadata[0].name
 
-  wait          = true
-  wait_for_jobs = true
+  wait            = true
+  wait_for_jobs   = true
+  cleanup_on_fail = true
 
   values = [
     var.custom_values.flux,
@@ -67,23 +68,27 @@ resource "helm_release" "flux" {
 }
 
 resource "helm_release" "flux_sync" {
-  name       = "${var.helm.release_name}-sync"
+  name       = var.helm.release_name
   repository = var.helm.chart_repository
   chart      = var.helm.chart_name_sync
   version    = var.helm.chart_sync_version
 
   namespace = kubernetes_namespace.ns.metadata[0].name
 
-  wait          = true
-  wait_for_jobs = true
+  wait            = true
+  wait_for_jobs   = true
+  cleanup_on_fail = true
 
   values = [
     var.custom_values.flux_sync,
   ]
 
-  set {
-    name  = "gitRepository.spec.secretRef.name"
-    value = kubernetes_secret.flux_system.metadata[0].name
+  dynamic "set" {
+    for_each = kubernetes_secret.flux_system
+    content {
+      name  = "gitRepository.spec.secretRef.name"
+      value = kubernetes_secret.flux_system[0].metadata[0].name
+    }
   }
 
   set {
@@ -121,10 +126,12 @@ resource "helm_release" "flux_sync" {
     value = kubernetes_namespace.ns.metadata[0].name
   }
 
-  depends_on = [helm_release.flux, kubernetes_namespace.ns]
+  depends_on = [helm_release.flux_base, kubernetes_namespace.ns]
 }
 
 resource "kubernetes_secret" "flux_system" {
+  count = var.git_credentials == null ? 0 : 1
+
   metadata {
     name      = "flux-secret"
     namespace = kubernetes_namespace.ns.metadata[0].name

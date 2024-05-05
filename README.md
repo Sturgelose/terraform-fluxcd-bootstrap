@@ -7,6 +7,36 @@ The original provider creates all the resources directly in Kubernetes, generati
 
 By using a HelmReleases under the hood, the only diffs should only be the values of the Helm Chart, helping in speed and management.
 
+## Protection against a broken cluster
+
+As Flux manages a whole cluster, this becomes quite a critical and delicate component, so here we will answer some questions on how this module reacts in certain situations:
+
+### What could happen if the base HelmChart gets uninstalled?
+
+This chart installs the Flux system and the CRDs.
+Mostly, just freeze the Flux reconciliations. As the CRDs are still in use, the chart will fail to uninstall completly and timeout.
+A solution to fix this situation is to rollback to the latest known state. To prevent this there is a `prevent_destroy = true` in the HelmChart resource, but you should harden your cluster to make sure only admins have rights to do this kind of operation.
+
+### What could happen if I rollback to a previous version?
+
+**If there is no update in the CRDs**, you are fine, versions are compatible and nothing will break.
+**If there are CRD updates**, it will mostly fail. The reason is that it might try to re-create older deprecated CRD versions. Helm won't like this and will fail the operation. You can revert the helm release version to a previous one to solve the situation.
+
+### What could happen if I uninstall the sync HelmChart?
+
+This chart sets up the sync between this cluster and the base cluster configuration.
+If this gets deleted, as it is configured with a `prune: true` it will also remove everything automatically installed by Flux and get rid of it. Potentially, this can delete all the things installed in this cluster.
+
+If you want to make sure something is kept, you can use `prune: false` or `kustomize.toolkit.fluxcd.io/prune: disabled` annotation, but do it sparringly. (More info in the next section)
+
+### Can I use `prune: false` safely?
+
+If you use `prune: false` and you keep Flux related resources (`kustomizations`, `helmReleases`, etc), you might have trouble when deleting the cluster. The reason is that they will have finalizers pointing to the Flux namespace, and will block both the deletion of the namespace and the deletion of the CRDs, eventually timing out the Terraform destroy and Helm uninstall operations.
+
+To avoid so, we suggest only setting the `prune: true` attribute or the `kustomize.toolkit.fluxcd.io/prune: disabled` **in resources not owned by Flux CRDs**. So, only use it in resources where data-loss may happen. But note that this might provoke potential naming collisions!
+
+Alternate uses of `prune: false` is to temporally set it to false when doing big changes to avoid loss of data, but only as a temporal setup. Usually you want the garbage-collector always on!
+
 ## Known Issues
 
 ### Using the Kubernetes provider

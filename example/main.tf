@@ -1,5 +1,5 @@
 resource "kind_cluster" "this" {
-    name = "test-cluster"
+  name = "test-cluster"
 }
 
 module "flux" {
@@ -7,13 +7,13 @@ module "flux" {
 
   flux_sync = {
     git_repository = "https://github.com/Sturgelose/flux-structure-example.git"
-    git_path = "./clusters/housy"
+    git_path       = "./clusters/housy/platform"
   }
 
   # Format defined in Flux Documentation: 
   # https://fluxcd.io/flux/components/source/gitrepositories/#secret-reference
-  git_credentials = {
-    username = "user"
-    password = "pass"
-  }
+  # git_credentials = {
+  #   username = "user"
+  #   password = "pass"
+  # }
 }
