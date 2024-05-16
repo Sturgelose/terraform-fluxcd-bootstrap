@@ -20,6 +20,7 @@ A solution to fix this situation is to rollback to the latest known state. To pr
 ### What could happen if I rollback to a previous version?
 
 **If there is no update in the CRDs**, you are fine, versions are compatible and nothing will break.
+
 **If there are CRD updates**, it will mostly fail. The reason is that it might try to re-create older deprecated CRD versions. Helm won't like this and will fail the operation. You can revert the helm release version to a previous one to solve the situation.
 
 ### What could happen if I uninstall the sync HelmChart?
